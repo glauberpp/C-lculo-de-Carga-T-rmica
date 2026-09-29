@@ -1,0 +1,1453 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Carga Térmica NBR 16655</title>
+<meta name="description" content="Calculadora de carga térmica residencial conforme a NBR 16655-3, com múltiplos ambientes e exportação em PDF.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+:root{
+  --bg:#f4f6f4; --surface:#ffffff; --surface-2:#edf1ee; --surface-3:#e4e9e5;
+  --border:#d6dcd7; --border-strong:#c1c9c3;
+  --text:#182420; --text-muted:#5c6b64; --text-faint:#8a978f;
+  --accent:#0e6f62; --accent-ink:#ffffff; --accent-soft:#e2f0ec; --accent-strong:#0a5349;
+  --accent2:#c2540f; --accent2-ink:#ffffff; --accent2-soft:#fbe9dd; --accent2-strong:#9c4008;
+  --good:#2f7d4f; --good-soft:#e4f3ea;
+  --danger:#b3261e; --danger-soft:#fbeae9;
+  --radius:10px; --radius-sm:6px;
+  --sans:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Consolas,monospace;
+  --shadow-1:0 1px 2px rgba(20,30,25,0.06),0 1px 1px rgba(20,30,25,0.04);
+  --shadow-2:0 4px 16px rgba(20,30,25,0.10);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#121714; --surface:#181f1b; --surface-2:#1f2721; --surface-3:#28312a;
+    --border:#324038; --border-strong:#41524a;
+    --text:#e9f0ea; --text-muted:#a7b6ad; --text-faint:#748379;
+    --accent:#3ecdb4; --accent-ink:#08221d; --accent-soft:#173029; --accent-strong:#57e0c8;
+    --accent2:#ff9a5c; --accent2-ink:#2c1200; --accent2-soft:#33200f; --accent2-strong:#ffb180;
+    --good:#59c785; --good-soft:#16281d;
+    --danger:#ff8781; --danger-soft:#341615;
+    --shadow-1:0 1px 2px rgba(0,0,0,0.35); --shadow-2:0 8px 24px rgba(0,0,0,0.45);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121714; --surface:#181f1b; --surface-2:#1f2721; --surface-3:#28312a;
+  --border:#324038; --border-strong:#41524a;
+  --text:#e9f0ea; --text-muted:#a7b6ad; --text-faint:#748379;
+  --accent:#3ecdb4; --accent-ink:#08221d; --accent-soft:#173029; --accent-strong:#57e0c8;
+  --accent2:#ff9a5c; --accent2-ink:#2c1200; --accent2-soft:#33200f; --accent2-strong:#ffb180;
+  --good:#59c785; --good-soft:#16281d;
+  --danger:#ff8781; --danger-soft:#341615;
+  --shadow-1:0 1px 2px rgba(0,0,0,0.35); --shadow-2:0 8px 24px rgba(0,0,0,0.45);
+  color-scheme:dark;
+}
+*{box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);margin:0;padding-inline:0;line-height:1.45;}
+h1,h2,h3,h4{font-family:var(--sans);text-wrap:balance;margin:0;}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums;}
+.subtotal{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap;}
+button{font-family:var(--sans);cursor:pointer;}
+input,select{font-family:var(--sans);}
+::selection{background:var(--accent-soft);}
+
+.app{display:flex;flex-direction:column;min-height:100%;}
+
+/* ---------- Header ---------- */
+.topbar{
+  position:sticky;top:env(safe-area-inset-top,0px);z-index:30;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+}
+.brand{display:flex;align-items:baseline;gap:8px;margin-right:auto;}
+.brand .name{font-weight:700;font-size:17px;letter-spacing:-0.01em;}
+.brand .norm{font-family:var(--mono);font-size:12px;color:var(--text-faint);border:1px solid var(--border);border-radius:999px;padding:2px 8px;}
+.mode-toggle{display:flex;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px;gap:2px;}
+.mode-toggle button{border:0;background:transparent;padding:7px 16px;border-radius:999px;font-size:13px;font-weight:600;color:var(--text-muted);transition:background .15s,color .15s;}
+.mode-toggle button.active[data-mode="resfriamento"]{background:var(--accent);color:var(--accent-ink);}
+.mode-toggle button.active[data-mode="aquecimento"]{background:var(--accent2);color:var(--accent2-ink);}
+.btn{border:1px solid var(--border-strong);background:var(--surface);color:var(--text);border-radius:var(--radius-sm);padding:8px 14px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+.btn:hover{background:var(--surface-2);}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+.btn.primary:hover{background:var(--accent-strong);border-color:var(--accent-strong);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* ---------- Shell ---------- */
+.shell{display:flex;flex:1;max-width:1360px;margin:0 auto;width:100%;gap:20px;padding:20px;align-items:flex-start;}
+.rail{width:230px;flex:none;display:flex;flex-direction:column;gap:6px;position:sticky;top:calc(64px + env(safe-area-inset-top,0px));}
+.rail-title{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-faint);padding:4px 10px;margin-top:8px;}
+.rail-title:first-child{margin-top:0;}
+.rail-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:var(--radius-sm);font-size:13.5px;font-weight:500;color:var(--text-muted);border:1px solid transparent;cursor:pointer;}
+.rail-item:hover{background:var(--surface-2);}
+.rail-item.active{background:var(--surface);border-color:var(--border);color:var(--text);font-weight:600;box-shadow:var(--shadow-1);}
+.rail-item .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none;}
+.rail-item .rm{margin-left:auto;opacity:0;font-size:15px;color:var(--text-faint);line-height:1;padding:2px 4px;border-radius:4px;}
+.rail-item:hover .rm{opacity:1;}
+.rail-item .rm:hover{color:var(--danger);background:var(--danger-soft);}
+.rail-add{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:var(--radius-sm);font-size:13.5px;font-weight:600;color:var(--accent);border:1px dashed var(--border-strong);background:transparent;}
+.rail-add:hover{background:var(--accent-soft);border-color:var(--accent);}
+
+.main{flex:1;min-width:0;display:flex;gap:20px;align-items:flex-start;}
+.content{flex:1;min-width:0;display:flex;flex-direction:column;gap:16px;}
+
+/* ---------- Cards / sections ---------- */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-1);}
+.card-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);}
+.card-head h3{font-size:14.5px;font-weight:700;}
+.card-head .hint{font-size:12px;color:var(--text-faint);margin-left:auto;}
+.card-head .section-total{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent);background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px 10px;white-space:nowrap;}
+.card-body{padding:14px 16px;display:flex;flex-direction:column;gap:12px;}
+
+.envname-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.envname-row input.envname{font-size:19px;font-weight:700;border:1px solid transparent;background:transparent;padding:4px 6px;border-radius:var(--radius-sm);flex:1;min-width:160px;color:var(--text);}
+.envname-row input.envname:hover,.envname-row input.envname:focus{border-color:var(--border);background:var(--surface-2);outline:none;}
+
+.field-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;}
+.field{display:flex;flex-direction:column;gap:4px;}
+.field label{font-size:11.5px;font-weight:600;color:var(--text-muted);}
+.field .sub{font-size:10.5px;color:var(--text-faint);font-weight:400;}
+.field .warn-msg{font-size:10.5px;color:var(--danger);font-weight:600;}
+input[type=text],select{
+  border:1px solid var(--border-strong);background:var(--surface);color:var(--text);
+  border-radius:var(--radius-sm);padding:7px 8px;font-size:13px;width:100%;
+}
+input[inputmode=decimal]{font-family:var(--mono);}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px;}
+input.invalid{border-color:var(--danger);background:var(--danger-soft);}
+input.invalid:focus{outline-color:var(--danger);}
+
+table.rows{width:100%;border-collapse:collapse;font-size:12.5px;}
+table.rows th{text-align:left;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--text-faint);padding:0 6px 6px;border-bottom:1px solid var(--border);}
+table.rows td{padding:5px 6px;vertical-align:middle;border-bottom:1px solid var(--border);}
+table.rows tr:last-child td{border-bottom:none;}
+table.rows td input,table.rows td select{padding:6px 7px;font-size:12.5px;}
+table.rows .num{width:76px;}
+.tbl-wrap{overflow-x:auto;}
+.rowrm{border:1px solid var(--border);background:var(--surface);color:var(--text-faint);border-radius:6px;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:15px;line-height:1;}
+.rowrm:hover{color:var(--danger);border-color:var(--danger);background:var(--danger-soft);}
+.addrow{align-self:flex-start;font-size:12.5px;font-weight:600;color:var(--accent);background:transparent;border:1px dashed var(--border-strong);border-radius:var(--radius-sm);padding:6px 12px;}
+.addrow:hover{background:var(--accent-soft);border-color:var(--accent);}
+.empty-note{font-size:12px;color:var(--text-faint);padding:6px 2px;}
+
+/* ---------- Results panel ---------- */
+.results{width:300px;flex:none;position:sticky;top:calc(64px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:12px;}
+.results .card-head h3{font-size:13.5px;}
+.res-total{padding:16px;display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--border);}
+.res-total .label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-faint);}
+.res-total .value{font-family:var(--mono);font-size:30px;font-weight:600;line-height:1.15;}
+.res-total .value small{font-size:15px;font-weight:500;color:var(--text-muted);}
+.res-total .sub{font-family:var(--mono);font-size:12.5px;color:var(--text-muted);}
+.res-rows{padding:4px 16px 14px;display:flex;flex-direction:column;}
+.res-row{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px dashed var(--border);font-size:12.5px;}
+.res-row:last-child{border-bottom:none;}
+.res-row .k{color:var(--text-muted);}
+.res-row .v{font-family:var(--mono);font-weight:600;white-space:nowrap;}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:9px 14px;border-radius:var(--radius-sm);font-size:12.5px;font-weight:700;margin:0 14px 14px;}
+.chip.cool{background:var(--accent-soft);color:var(--accent-strong);}
+.chip.heat{background:var(--accent2-soft);color:var(--accent2-strong);}
+.note{font-size:11.5px;color:var(--text-faint);padding:0 16px 14px;line-height:1.5;}
+
+/* ---------- Resumo geral ---------- */
+.summary-table{width:100%;border-collapse:collapse;font-size:13px;}
+.summary-table th{text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--text-faint);padding:8px 10px;border-bottom:1px solid var(--border-strong);}
+.summary-table td{padding:9px 10px;border-bottom:1px solid var(--border);}
+.summary-table td.num,.summary-table th.num{font-family:var(--mono);text-align:right;}
+.summary-table tr.grand td{border-top:2px solid var(--border-strong);border-bottom:none;font-weight:700;background:var(--surface-2);}
+.badge{display:inline-block;font-family:var(--mono);font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent-strong);}
+
+/* ---------- Mobile ---------- */
+@media (max-width:900px){
+  .shell{flex-direction:column;padding:14px;}
+  .rail{width:100%;position:static;flex-direction:row;overflow-x:auto;gap:8px;padding-bottom:4px;}
+  .rail-title{display:none;}
+  .rail-item,.rail-add{white-space:nowrap;flex:none;}
+  .main{flex-direction:column;}
+  .results{width:100%;position:static;order:2;}
+  .content{order:1;}
+  .field-grid{grid-template-columns:1fr 1fr;}
+}
+@media (max-width:480px){
+  .field-grid{grid-template-columns:1fr;}
+  .topbar{padding:10px 14px;}
+}
+
+.hidden{display:none!important;}
+.footer-note{max-width:1360px;margin:0 auto;padding:6px 20px 32px;font-size:11.5px;color:var(--text-faint);text-align:center;}
+
+</style>
+
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <span class="name">Carga Térmica</span>
+      <span class="norm">NBR 16655-3</span>
+    </div>
+    <div class="mode-toggle" id="modeToggle">
+      <button data-mode="resfriamento" class="active">Resfriamento</button>
+      <button data-mode="aquecimento">Aquecimento</button>
+    </div>
+    <button class="btn" id="btnAbrir">Abrir projeto</button>
+    <button class="btn" id="btnSalvar">Salvar projeto</button>
+    <input type="file" id="fileAbrir" accept="application/json,.json" class="hidden">
+    <button class="btn primary" id="btnPdf">Baixar relatório (PDF)</button>
+  </div>
+
+  <div class="shell">
+    <div class="rail" id="rail"></div>
+    <div class="main">
+      <div class="content" id="content"></div>
+      <div class="results" id="resultsPanel"></div>
+    </div>
+  </div>
+  <div class="footer-note">Cálculo simplificado conforme ABNT NBR 16655-3:2019. Os dados preenchidos existem apenas nesta sessão do navegador — use "Salvar projeto" para gerar um arquivo (.json) e continuar depois em "Abrir projeto", ou "Baixar relatório (PDF)" para um registro final. Os botões de download exigem acesso de "Comentarista" ou "Pode editar" ao artefato (Compartilhar → Acesso) — o nível "Pode visualizar" não permite salvar arquivos.</div>
+</div>
+
+<script>
+/* ============================================================
+   MOTOR DE CÁLCULO — dados de referência da NBR 16655-3
+   ============================================================ */
+const TAB1_VERAO = {
+  "Belém, PA":         { altitude:16,   tbs:33.2, tbu:25.9, w:0.0182, v:0.895, h:79.87 },
+  "Brasília, DF":      { altitude:1060, tbs:32.2, tbu:17.1, w:0.0082, v:0.995, h:53.32 },
+  "Porto Alegre, RS":  { altitude:3,    tbs:34.7, tbu:24.6, w:0.0186, v:0.898, h:82.43 },
+  "Rio de Janeiro, RJ":{ altitude:3,    tbs:34.1, tbu:25.2, w:0.0166, v:0.894, h:76.72 },
+  "São Paulo, SP":     { altitude:802,  tbs:32.1, tbu:20.4, w:0.0117, v:0.970, h:62.29 },
+  "Aracaju, SE":        { altitude:7,   tbs:32.1, tbu:26.7, w:0.0200, v:0.893, h:83.49 },
+  "Belo Horizonte, MG": { altitude:789, tbs:32.9, tbu:20.1, w:0.0109, v:0.970, h:61.12 },
+  "Boa Vista, RR":      { altitude:84,  tbs:35.9, tbu:24.9, w:0.0155, v:0.906, h:75.93 },
+  "Campo Grande, MS":   { altitude:559, tbs:36.2, tbu:22.5, w:0.0127, v:0.956, h:68.93 },
+  "Cuiabá, MT":         { altitude:188, tbs:38.2, tbu:22.1, w:0.0104, v:0.917, h:65.24 },
+  "Curitiba, PR":       { altitude:911, tbs:30.9, tbu:20.1, w:0.0120, v:0.979, h:61.82 },
+  "Florianópolis, SC":  { altitude:6,   tbs:32.1, tbu:25.2, w:0.0174, v:0.890, h:76.88 },
+  "Fortaleza, CE":      { altitude:25,  tbs:32.1, tbu:24.9, w:0.0170, v:0.891, h:75.72 },
+  "Goiânia, GO":        { altitude:747, tbs:35.2, tbu:19.7, w:0.0093, v:0.969, h:59.38 },
+  "João Pessoa, PB":    { altitude:7,   tbs:32.1, tbu:24.7, w:0.0166, v:0.889, h:74.78 },
+  "Macapá, AP":         { altitude:17,  tbs:35.1, tbu:26.5, w:0.0184, v:0.901, h:82.51 },
+  "Maceió, AL":         { altitude:118, tbs:33.0, tbu:25.5, w:0.0178, v:0.905, h:78.85 },
+  "Manaus, AM":         { altitude:81,  tbs:35.9, tbu:26.3, w:0.0179, v:0.909, h:82.01 },
+  "Natal, RN":          { altitude:52,  tbs:32.8, tbu:25.5, w:0.0177, v:0.897, h:78.43 },
+  "Palmas, TO":         { altitude:236, tbs:37.0, tbu:21.0, w:0.0094, v:0.917, h:61.46 },
+  "Porto Velho, RO":    { altitude:90,  tbs:36.0, tbu:24.4, w:0.0147, v:0.906, h:73.87 },
+  "Recife, PE":         { altitude:10,  tbs:34.0, tbu:27.1, w:0.0199, v:0.899, h:85.26 },
+  "Rio Branco, AC":     { altitude:193, tbs:36.2, tbu:25.2, w:0.0162, v:0.920, h:77.90 },
+  "Salvador, BA":       { altitude:20,  tbs:32.3, tbu:26.6, w:0.0198, v:0.895, h:83.12 },
+  "São Luís, MA":       { altitude:54,  tbs:33.9, tbu:26.1, w:0.0183, v:0.901, h:81.03 },
+  "Teresina, PI":       { altitude:67,  tbs:38.8, tbu:22.8, w:0.0110, v:0.906, h:67.23 },
+  "Vitória, ES":        { altitude:3,   tbs:34.1, tbu:25.5, w:0.0171, v:0.895, h:78.06 },
+};
+const TAB2_INVERNO = {
+  "Belém, PA":         { altitude:16,   tbs:22.8, po:20.8, w:0.0157, v:0.861, h:62.79 },
+  "Brasília, DF":      { altitude:1060, tbs:10.0, po:1.2,  w:0.0047, v:0.918, h:21.84 },
+  "Porto Alegre, RS":  { altitude:3,    tbs:3.9,  po:1.1,  w:0.0041, v:0.790, h:14.18 },
+  "Rio de Janeiro, RJ":{ altitude:3,    tbs:16.2, po:11.9, w:0.0087, v:0.832, h:38.23 },
+  "São Paulo, SP":     { altitude:802,  tbs:8.9,  po:3.9,  w:0.0055, v:0.887, h:22.80 },
+  "Aracaju, SE":        { altitude:7,   tbs:21.9, po:17.9, w:0.0129, v:0.854, h:54.82 },
+  "Belo Horizonte, MG": { altitude:789, tbs:12.2, po:5.8,  w:0.0063, v:0.897, h:28.17 },
+  "Boa Vista, RR":      { altitude:84,  tbs:22.8, po:16.8, w:0.0121, v:0.863, h:53.71 },
+  "Campo Grande, MS":   { altitude:559, tbs:10.2, po:3.1,  w:0.0050, v:0.865, h:22.86 },
+  "Cuiabá, MT":         { altitude:188, tbs:15.0, po:6.9,  w:0.0063, v:0.843, h:31.02 },
+  "Curitiba, PR":       { altitude:911, tbs:5.0,  po:1.2,  w:0.0046, v:0.885, h:16.58 },
+  "Florianópolis, SC":  { altitude:6,   tbs:9.7,  po:4.9,  w:0.0054, v:0.809, h:23.36 },
+  "Fortaleza, CE":      { altitude:25,  tbs:23.0, po:17.2, w:0.0123, v:0.858, h:54.43 },
+  "Goiânia, GO":        { altitude:747, tbs:13.8, po:5.0,  w:0.0059, v:0.897, h:28.79 },
+  "João Pessoa, PB":    { altitude:7,   tbs:20.2, po:17.9, w:0.0129, v:0.849, h:53.07 },
+  "Macapá, AP":         { altitude:17,  tbs:22.9, po:21.8, w:0.0165, v:0.863, h:65.01 },
+  "Maceió, AL":         { altitude:118, tbs:19.1, po:17.8, w:0.0129, v:0.857, h:51.94 },
+  "Manaus, AM":         { altitude:81,  tbs:21.9, po:19.1, w:0.0140, v:0.863, h:57.62 },
+  "Natal, RN":          { altitude:52,  tbs:21.1, po:17.9, w:0.0129, v:0.856, h:54.00 },
+  "Palmas, TO":         { altitude:236, tbs:20.0, po:8.2,  w:0.0069, v:0.864, h:37.63 },
+  "Porto Velho, RO":    { altitude:90,  tbs:20.0, po:15.1, w:0.0109, v:0.854, h:47.79 },
+  "Recife, PE":         { altitude:10,  tbs:22.0, po:18.0, w:0.0130, v:0.855, h:55.18 },
+  "Rio Branco, AC":     { altitude:193, tbs:16.1, po:12.0, w:0.0089, v:0.850, h:38.72 },
+  "Salvador, BA":       { altitude:20,  tbs:21.2, po:17.2, w:0.0123, v:0.852, h:52.57 },
+  "São Luís, MA":       { altitude:54,  tbs:23.1, po:18.6, w:0.0135, v:0.863, h:57.58 },
+  "Teresina, PI":       { altitude:67,  tbs:22.6, po:13.5, w:0.0098, v:0.858, h:47.66 },
+  "Vitória, ES":        { altitude:3,   tbs:17.8, po:13.9, w:0.0099, v:0.838, h:42.99 },
+};
+// Cidades cobertas com dados próprios de CLTD/SHGF (Tabelas 7 e 8 da NBR 16655-3).
+// As demais 22 capitais usam os dados de temperatura/umidade psicrométricos
+// específicos de cada uma (Tabelas A.2 a A.4 da NBR 16401-1:2024), mas para
+// Tabela 7 (CLTD) e Tabela 8 (SHGF) — que a norma só tabula para 5 cidades —
+// usam por aproximação os valores da cidade climaticamente mais parecida
+// dentre essas 5, conforme região/clima (litoral equatorial/tropical N-NE,
+// planalto central/savânico, sul subtropical, litoral SE, planalto SE).
+const CIDADE_CLTD_REF = {
+  "Aracaju, SE":"Belém, PA", "Fortaleza, CE":"Belém, PA", "João Pessoa, PB":"Belém, PA",
+  "Macapá, AP":"Belém, PA", "Maceió, AL":"Belém, PA", "Manaus, AM":"Belém, PA",
+  "Natal, RN":"Belém, PA", "Porto Velho, RO":"Belém, PA", "Recife, PE":"Belém, PA",
+  "Rio Branco, AC":"Belém, PA", "Salvador, BA":"Belém, PA", "São Luís, MA":"Belém, PA",
+  "Boa Vista, RR":"Brasília, DF", "Campo Grande, MS":"Brasília, DF", "Cuiabá, MT":"Brasília, DF",
+  "Goiânia, GO":"Brasília, DF", "Palmas, TO":"Brasília, DF", "Teresina, PI":"Brasília, DF",
+  "Curitiba, PR":"Porto Alegre, RS", "Florianópolis, SC":"Porto Alegre, RS",
+  "Vitória, ES":"Rio de Janeiro, RJ",
+  "Belo Horizonte, MG":"São Paulo, SP",
+};
+function cidadeRefCLTD(cidade){ return CIDADE_CLTD_REF[cidade] || cidade; }
+const TAB3_INTERNO_VERAO = {
+  "50|24":{w:0.0094,v:0.860,h:47.92}, "50|26":{w:0.0106,v:0.867,h:53.03},
+  "500|24":{w:0.0099,v:0.908,h:49.25}, "500|26":{w:0.0112,v:0.916,h:54.54},
+  "750|24":{w:0.0102,v:0.936,h:50.03}, "750|26":{w:0.0115,v:0.944,h:55.43},
+  "1000|24":{w:0.0105,v:0.965,h:50.84}, "1000|26":{w:0.0119,v:0.974,h:56.34},
+};
+const TAB4_INTERNO_INVERNO = {
+  "50|18":{w:0.0064,v:0.838,h:34.40}, "50|20":{w:0.0073,v:0.845,h:38.63},
+  "500|18":{w:0.0068,v:0.885,h:35.31}, "500|20":{w:0.0077,v:0.893,h:39.67},
+  "750|18":{w:0.0070,v:0.912,h:35.84}, "750|20":{w:0.0080,v:0.920,h:40.27},
+  "1000|18":{w:0.0072,v:0.941,h:36.39}, "1000|20":{w:0.0082,v:0.949,h:40.90},
+};
+const TIPOS_SUPERFICIE = {
+  "Parede externa":0.425, "Laje externa + espessura ar":0.590, "Laje externa + isolamento":0.90425,
+  "Piso/Laje interna":0.321, "Parede interna":0.394,
+  "Laje + telhado":0.41,
+};
+const ORIENTACOES_OPACAS = ["Norte","Nordeste","Leste","Sudeste","Sul","Sudoeste","Oeste","Noroeste","Horizontal","Ambiente adjacente não condicionado"];
+const ORIENTACOES_JANELA = ["Norte","Nordeste","Leste","Sudeste","Sul","Sudoeste","Oeste","Noroeste","Horizontal"];
+const TAB7_CLTD = {
+  referencia:         {Norte:10,Nordeste:15,Leste:19,Sudeste:20,Sul:18,Sudoeste:18,Oeste:15,Noroeste:11,Horizontal:24,Vidro:8},
+  "Belém, PA":         {Norte:11.1,Nordeste:16.1,Leste:20.1,Sudeste:21.1,Sul:19.1,Sudoeste:19.1,Oeste:16.1,Noroeste:12.1,Horizontal:25.1,Vidro:9.1},
+  "Brasília, DF":      {Norte:15.2,Nordeste:20.2,Leste:24.2,Sudeste:25.2,Sul:23.2,Sudoeste:23.2,Oeste:20.2,Noroeste:16.2,Horizontal:29.2,Vidro:13.2},
+  "Porto Alegre, RS":  {Norte:11.85,Nordeste:16.85,Leste:20.85,Sudeste:21.85,Sul:19.85,Sudoeste:19.85,Oeste:16.85,Noroeste:12.85,Horizontal:25.85,Vidro:9.85},
+  "Rio de Janeiro, RJ":{Norte:11.2,Nordeste:16.2,Leste:20.2,Sudeste:21.2,Sul:19.2,Sudoeste:19.2,Oeste:16.2,Noroeste:12.2,Horizontal:25.2,Vidro:9.2},
+  "São Paulo, SP":     {Norte:9.95,Nordeste:14.95,Leste:18.95,Sudeste:19.95,Sul:17.95,Sudoeste:17.95,Oeste:14.95,Noroeste:10.95,Horizontal:23.95,Vidro:7.95},
+};
+const TAB8_SHGF = {
+  "Belém, PA":         {Norte:363,Nordeste:634,Leste:615,Sudeste:243,Sul:120,Sudoeste:243,Oeste:615,Noroeste:634,Horizontal:820},
+  "Brasília, DF":      {Norte:135,Nordeste:363,Leste:666,Sudeste:582,Sul:163,Sudoeste:582,Oeste:666,Noroeste:363,Horizontal:876},
+  "Porto Alegre, RS":  {Norte:204,Nordeste:458,Leste:678,Sudeste:532,Sul:128,Sudoeste:532,Oeste:678,Noroeste:458,Horizontal:866},
+  "Rio de Janeiro, RJ":{Norte:142,Nordeste:555,Leste:672,Sudeste:407,Sul:145,Sudoeste:407,Oeste:672,Noroeste:555,Horizontal:877},
+  "São Paulo, SP":     {Norte:142,Nordeste:555,Leste:672,Sudeste:407,Sul:145,Sudoeste:407,Oeste:672,Noroeste:555,Horizontal:877},
+};
+const TAB9_CLF = {Norte:0.75,Nordeste:0.20,Leste:0.17,Sudeste:0.22,Sul:0.35,Sudoeste:0.81,Oeste:0.82,Noroeste:0.73,Horizontal:0.58};
+const TAB10_SOMBREAMENTO = {"Sem proteção":0.87,"Cortina":0.55,"Película Reflexiva":0.30};
+const TAB11_PESSOAS = {"Pessoas sentadas, trabalho leve":{cs:75,ct:150,clf:1}, "Atividade física intensa":{cs:120,ct:375,clf:1}};
+const TAB12_ILUMINACAO = {"Escritório":12,"Sala de jantar":23,"Quartos de dormir":10};
+const TAB13_EQUIPAMENTOS = {
+  "Televisão 40 polegadas":{w:250,clf:0.8},
+  "Computador desktop":{w:135,clf:0.8},
+  "Computador notebook":{w:40,clf:1},
+  "Monitor de tela plana (LCD)":{w:30,clf:0.8},
+  "Impressora a laser (doméstica/pequeno escritório)":{w:100,clf:0.7},
+  "Forno de micro-ondas":{w:400,clf:1},
+  // Os itens abaixo NÃO constam nas tabelas da NBR 16655-3/16401-1 (que só
+  // cobrem equipamentos de escritório e cozinhas comerciais de grande porte).
+  // São estimativas de engenharia com base em valores típicos de mercado —
+  // por isso o sufixo "(estimado)" no nome, mantido visível na tela e no PDF.
+  "Geladeira/Refrigerador doméstico (estimado)":{w:150,clf:1},
+  "Fogão elétrico 5 bocas, sem coifa (estimado)":{w:2000,clf:0.3},
+  "Forno elétrico embutido (estimado)":{w:1200,clf:0.5},
+  "Churrasqueira elétrica doméstica (estimado)":{w:1500,clf:0.5},
+};
+const CIDADES = Object.keys(TAB1_VERAO);
+const ALTITUDES = [50,500,750,1000];
+const CAPACIDADES_BTU = [7000,9000,12000,18000,21000,24000,30000,36000,48000,60000];
+// Referências de instalação por capacidade — linha frigorígena (líquido/sucção),
+// isolamento térmico (mesmo diâmetro nominal da tubulação; espessura mínima usual),
+// disjuntor e bitolas de cabo (alimentação e interligação/comunicação).
+// NÃO é um valor normativo da NBR 16655-3: são valores típicos de mercado para
+// splits hi-wall/piso-teto 220V monofásico, consolidados a partir de tabelas de
+// fabricantes/instaladores. Variam por marca, modelo, tensão (mono/trifásico) e
+// comprimento da linha — sempre confirmar no manual do equipamento específico.
+const TAB14_INSTALACAO = {
+  7000:  { liquido:'1/4"', sucao:'3/8"', isolamento:'9 mm',  disjuntor:10, caboAlim:'1,5', caboInterlig:'1,5' },
+  9000:  { liquido:'1/4"', sucao:'3/8"', isolamento:'9 mm',  disjuntor:10, caboAlim:'1,5', caboInterlig:'1,5' },
+  12000: { liquido:'1/4"', sucao:'1/2"', isolamento:'9 mm',  disjuntor:10, caboAlim:'1,5', caboInterlig:'1,5' },
+  18000: { liquido:'1/4"', sucao:'1/2"', isolamento:'9 mm',  disjuntor:16, caboAlim:'1,5', caboInterlig:'1,5' },
+  21000: { liquido:'3/8"', sucao:'5/8"', isolamento:'9 mm',  disjuntor:20, caboAlim:'2,5', caboInterlig:'1,5' },
+  24000: { liquido:'3/8"', sucao:'5/8"', isolamento:'9 mm',  disjuntor:20, caboAlim:'2,5', caboInterlig:'1,5' },
+  30000: { liquido:'3/8"', sucao:'5/8"', isolamento:'13 mm', disjuntor:20, caboAlim:'2,5', caboInterlig:'1,5' },
+  36000: { liquido:'3/8"', sucao:'3/4"', isolamento:'13 mm', disjuntor:25, caboAlim:'4',   caboInterlig:'2,5' },
+  48000: { liquido:'3/8"', sucao:'7/8"', isolamento:'13 mm', disjuntor:25, caboAlim:'4',   caboInterlig:'2,5' },
+  60000: { liquido:'3/8"', sucao:'7/8"', isolamento:'13 mm', disjuntor:32, caboAlim:'6',   caboInterlig:'2,5' },
+};
+function especificacaoInstalacao(capBtu){ return TAB14_INSTALACAO[capBtu] || null; }
+const CIDADE_ALT_SUGERIDA = {
+  "Belém, PA":50,"Brasília, DF":1000,"Porto Alegre, RS":50,"Rio de Janeiro, RJ":50,"São Paulo, SP":750,
+  "Aracaju, SE":50, "Belo Horizonte, MG":750, "Boa Vista, RR":50, "Campo Grande, MS":500,
+  "Cuiabá, MT":50, "Curitiba, PR":1000, "Florianópolis, SC":50, "Fortaleza, CE":50,
+  "Goiânia, GO":750, "João Pessoa, PB":50, "Macapá, AP":50, "Maceió, AL":50,
+  "Manaus, AM":50, "Natal, RN":50, "Palmas, TO":50, "Porto Velho, RO":50,
+  "Recife, PE":50, "Rio Branco, AC":50, "Salvador, BA":50, "São Luís, MA":50,
+  "Teresina, PI":50, "Vitória, ES":50,
+};
+
+function w2btu(w){return w*3.412;}
+// Aceita tanto "10.8" quanto "10,8" (padrão brasileiro) — os campos são
+// type="text" justamente para não perder o "," que um <input type="number">
+// descarta silenciosamente em muitos navegadores.
+function parseNum(v){
+  if(v==null) return 0;
+  const s = String(v).trim().replace(',', '.');
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : 0;
+}
+// Vazão mínima de renovação de ar (m³/(h·m²)) exigida pela norma quando há área de
+// piso informada. Abaixo disso, com área>0, a entrada é inválida.
+const VAZAO_MINIMA_RENOVACAO = 3.6;
+function infiltracaoInvalida(inf){
+  return (inf.areaPiso||0)>0 && !((inf.vazaoEspecifica||0) >= VAZAO_MINIMA_RENOVACAO);
+}
+// Vazão efetivamente usada no cálculo: nunca inferior ao mínimo normativo quando há
+// área de piso, mesmo que o campo ainda mostre um valor inválido durante a digitação
+// (a correção visual do campo ocorre ao sair dele — ver renderInfiltracao).
+function vazaoEfetiva(inf){
+  const v = inf.vazaoEspecifica||0;
+  return (inf.areaPiso||0)>0 ? Math.max(v, VAZAO_MINIMA_RENOVACAO) : v;
+}
+// Verifica se ALGUM ambiente do projeto tem vazão de renovação inválida — usado para
+// bloquear a geração do PDF enquanto houver dados inválidos.
+function projetoTemDadosInvalidos(){
+  return state.ambientes.some(a=>infiltracaoInvalida(a.infiltracao));
+}
+// A NBR 16655-3 observa que a carga calculada corresponde ao dia mais crítico do
+// ano — logo, o equipamento não precisa necessariamente ter capacidade igual ou
+// superior à carga; uma capacidade padrão ligeiramente inferior, porém próxima,
+// tende a atender bem na maior parte do ano. Por isso a sugestão usa a capacidade
+// padrão mais próxima da carga calculada (podendo ficar acima ou abaixo dela).
+function capacidadeSugerida(btu){
+  if(!(btu>0)) return null; // carga zero (ou negativa/inválida) — nenhum equipamento é necessário
+  let melhor = CAPACIDADES_BTU[0], menorDist = Math.abs(btu-melhor);
+  for(const c of CAPACIDADES_BTU){
+    const d = Math.abs(btu-c);
+    if(d < menorDist){ menorDist = d; melhor = c; }
+  }
+  return melhor;
+}
+
+function calcSuperficieOpaca(sup, cidade, tbsIntVerao){
+  const R = sup.tipo==="Personalizado" ? (sup.rCustom||0.4) : TIPOS_SUPERFICIE[sup.tipo];
+  let cltd;
+  if(sup.orientacao==="Ambiente adjacente não condicionado") cltd = TAB1_VERAO[cidade].tbs + 3 - tbsIntVerao;
+  else cltd = (TAB7_CLTD[cidadeRefCLTD(cidade)]||TAB7_CLTD.referencia)[sup.orientacao];
+  const q = R>0 ? (1/R)*cltd*(sup.area||0) : 0;
+  return {q,R,cltd};
+}
+function calcSuperficieOpacaInverno(sup, cidade, tbsIntInverno){
+  const R = sup.tipo==="Personalizado" ? (sup.rCustom||0.4) : TIPOS_SUPERFICIE[sup.tipo];
+  let tExt;
+  if(sup.orientacao==="Ambiente adjacente não condicionado") tExt = TAB2_INVERNO[cidade].tbs + 3;
+  else tExt = TAB2_INVERNO[cidade].tbs;
+  const dt = tbsIntInverno - tExt;
+  // Se o exterior estiver mais quente que o interior (ex.: Belém), não há perda de
+  // calor por essa superfície nesse instante — a carga individual não pode ser negativa.
+  const q = Math.max(R>0 ? (1/R)*dt*(sup.area||0) : 0, 0);
+  return {q,dt};
+}
+// Janelas têm DOIS efeitos térmicos somados: condução (como uma parede, usando o
+// CLTD da linha "Vidro" da Tabela 7 — independente da orientação) + insolação
+// (ganho solar, Eq. 8, dependente da orientação — Tabelas 8, 9 e 10).
+function calcJanela(jan, cidade){
+  const R = jan.camadas==="Duplo" ? 0.341 : 0.173; // Tabela 6: janela simples/dupla
+  const cltdVidro = (TAB7_CLTD[cidadeRefCLTD(cidade)]||TAB7_CLTD.referencia).Vidro;
+  const qCond = (1/R)*cltdVidro*(jan.area||0);
+
+  const shgf = (TAB8_SHGF[cidadeRefCLTD(cidade)])[jan.orientacao];
+  const clf = TAB9_CLF[jan.orientacao];
+  const sc = jan.protecao==="Personalizado" ? (jan.scCustom??0.87) : TAB10_SOMBREAMENTO[jan.protecao];
+  const qInsol = (jan.area||0)*sc*shgf*clf;
+
+  return {q:qCond+qInsol, qCond, qInsol, shgf, clf, sc, R, cltdVidro};
+}
+function calcJanelaInverno(jan, cidade, tbsIntInverno){
+  const R = jan.camadas==="Duplo" ? 0.341 : 0.173;
+  const tExt = TAB2_INVERNO[cidade].tbs;
+  const dt = tbsIntInverno - tExt;
+  // Idem: sem perda individual negativa quando o exterior está mais quente.
+  const q = Math.max((1/R)*dt*(jan.area||0), 0);
+  return {q,dt};
+}
+function calcPessoas(p){
+  const cat = p.atividade==="Personalizado" ? null : TAB11_PESSOAS[p.atividade];
+  const cs = p.atividade==="Personalizado" ? (p.csCustom||0) : cat.cs;
+  const ct = p.atividade==="Personalizado" ? (p.ctCustom||0) : cat.ct;
+  const clf = p.clfCustom!=null ? p.clfCustom : 1;
+  const qs = (p.quantidade||0)*cs*clf;
+  const ql = (p.quantidade||0)*(ct-cs)*clf;
+  return {qs,ql,qt:qs+ql};
+}
+function calcIluminacao(il){
+  let pInst;
+  if(il.modo==="densidade"){
+    const dens = il.tipoAmbiente==="Personalizado" ? (il.densidadeCustom||0) : TAB12_ILUMINACAO[il.tipoAmbiente];
+    pInst = (il.area||0)*dens;
+  } else pInst = il.potenciaInstalada||0;
+  const clf = il.clfCustom!=null ? il.clfCustom : 1;
+  return {q:pInst*clf, pInst};
+}
+function calcEquipamento(eq){
+  const cat = eq.nome==="Personalizado" ? null : TAB13_EQUIPAMENTOS[eq.nome];
+  const w = eq.nome==="Personalizado" ? (eq.wCustom||0) : cat.w;
+  const clf = eq.clfCustom!=null ? eq.clfCustom : (cat? cat.clf : 1);
+  return {q:(eq.quantidade||0)*w*clf};
+}
+function calcInfiltracaoVerao(inf, cidade, altitude, tbsIntVerao){
+  const Qae = vazaoEfetiva(inf)*(inf.areaPiso||0);
+  const ext = TAB1_VERAO[cidade];
+  const intp = TAB3_INTERNO_VERAO[`${altitude}|${tbsIntVerao}`];
+  const mae = (Qae/3600)/ext.v;
+  const qtae = mae*(ext.h-intp.h)*1000;
+  const qlae = mae*2501*(ext.w-intp.w)*1000;
+  return {Qae,mae,qtae,qlae,qsae:qtae-qlae};
+}
+function calcInfiltracaoInverno(inf, cidade, altitude, tbsIntInverno){
+  const Qae = vazaoEfetiva(inf)*(inf.areaPiso||0);
+  const ext = TAB2_INVERNO[cidade];
+  const intp = TAB4_INTERNO_INVERNO[`${altitude}|${tbsIntInverno}`];
+  const mae = (Qae/3600)/ext.v;
+  const qtae = mae*(ext.h-intp.h)*1000;
+  const qlae = mae*2501*(ext.w-intp.w)*1000;
+  return {Qae,mae,qtae,qlae,qsae:qtae-qlae};
+}
+
+function computeAmbiente(env, mode){
+  if(mode==="resfriamento"){
+    let opacas=0, vidros=0;
+    env.superficies.forEach(s=>opacas+=calcSuperficieOpaca(s, env.cidade, env.tbsVerao).q);
+    env.janelas.forEach(j=>vidros+=calcJanela(j, env.cidade).q);
+    let ps=0, pl=0; env.pessoas.forEach(p=>{const r=calcPessoas(p); ps+=r.qs; pl+=r.ql;});
+    let ilum=0; env.iluminacao.forEach(i=>ilum+=calcIluminacao(i).q);
+    let equip=0; env.equipamentos.forEach(e=>equip+=calcEquipamento(e).q);
+    const inf = calcInfiltracaoVerao(env.infiltracao, env.cidade, env.altitude, env.tbsVerao);
+    const sensivel = opacas + vidros + inf.qsae + ps + ilum + equip;
+    const latente = inf.qlae + pl;
+    const total = sensivel + latente;
+    return {opacas,vidros,infSens:inf.qsae,infLat:inf.qlae,infTot:inf.qtae,pessoasSens:ps,pessoasLat:pl,ilum,equip,sensivel,latente,total};
+  } else {
+    let opacas=0, vidros=0;
+    env.superficies.forEach(s=>opacas+=calcSuperficieOpacaInverno(s, env.cidade, env.tbsInverno).q);
+    env.janelas.forEach(j=>vidros+=calcJanelaInverno(j, env.cidade, env.tbsInverno).q);
+    const inf = calcInfiltracaoInverno(env.infiltracao, env.cidade, env.altitude, env.tbsInverno);
+    const infPerda = Math.max(-inf.qtae, 0); // perda = negativo do delta calculado (ext mais frio que int); nunca negativa
+    // opacas e vidros já vêm com clamp individual (>=0); proteção final por segurança.
+    const total = Math.max(opacas + vidros + infPerda, 0);
+    return {opacas,vidros,infPerda,total,sensivel:total,latente:0};
+  }
+}
+
+/* ============================================================
+   ESTADO DA APLICAÇÃO
+   ============================================================ */
+let uidCounter = 1;
+function uid(){return "id"+(uidCounter++);}
+
+function novoAmbiente(nome){
+  return {
+    id: uid(), nome: nome||"Novo ambiente",
+    cidade: "São Paulo, SP", altitude: 750, tbsVerao: 24, tbsInverno: 18,
+    superficies: [], janelas: [], pessoas: [], iluminacao: [], equipamentos: [],
+    infiltracao: { areaPiso: 0, vazaoEspecifica: 7.2 },
+  };
+}
+
+// Ambiente-exemplo: reproduz o Anexo A da norma (sala de estar, São Paulo, 60 m²)
+function ambienteExemplo(){
+  const e = novoAmbiente("Sala de Estar (exemplo — Anexo A da norma)");
+  e.infiltracao = { areaPiso: 60, vazaoEspecifica: 7.2 };
+  e.superficies = [
+    {id:uid(), descricao:"Parede noroeste", tipo:"Parede externa", area:7.5, orientacao:"Noroeste"},
+    {id:uid(), descricao:"Parede sudeste", tipo:"Parede externa", area:7.5, orientacao:"Sudeste"},
+    {id:uid(), descricao:"Parede interna (ambiente adjacente)", tipo:"Parede interna", area:25, orientacao:"Ambiente adjacente não condicionado"},
+    {id:uid(), descricao:"Piso (ambiente adjacente)", tipo:"Piso/Laje interna", area:60, orientacao:"Ambiente adjacente não condicionado"},
+    {id:uid(), descricao:"Laje/teto (ambiente adjacente)", tipo:"Piso/Laje interna", area:60, orientacao:"Ambiente adjacente não condicionado"},
+  ];
+  e.janelas = [
+    {id:uid(), orientacao:"Noroeste", camadas:"Simples", protecao:"Sem proteção", area:7.5},
+    {id:uid(), orientacao:"Sudeste", camadas:"Simples", protecao:"Sem proteção", area:7.5},
+  ];
+  e.pessoas = [{id:uid(), atividade:"Pessoas sentadas, trabalho leve", quantidade:8, clfCustom:1}];
+  e.iluminacao = [{id:uid(), modo:"potencia", potenciaInstalada:240, clfCustom:0}];
+  e.equipamentos = [
+    {id:uid(), nome:"Televisão 40 polegadas", quantidade:1},
+    {id:uid(), nome:"Computador desktop", quantidade:1},
+  ];
+  return e;
+}
+
+const state = {
+  mode: "resfriamento",
+  ambientes: [novoAmbiente("Ambiente 1")],
+  activeId: null,
+  view: "ambiente", // "ambiente" | "resumo"
+};
+state.activeId = state.ambientes[0].id;
+
+function activeEnv(){ return state.ambientes.find(a=>a.id===state.activeId); }
+
+/* ============================================================
+   RENDER — trilho lateral
+   ============================================================ */
+function renderRail(){
+  const rail = document.getElementById('rail');
+  let html = '<div class="rail-title">Projeto</div>';
+  html += `<div class="rail-item ${state.view==='resumo'?'active':''}" data-action="resumo"><span class="dot" style="background:var(--text-faint)"></span>Resumo geral</div>`;
+  html += '<div class="rail-title">Ambientes</div>';
+  state.ambientes.forEach(a=>{
+    const active = state.view==='ambiente' && a.id===state.activeId;
+    html += `<div class="rail-item ${active?'active':''}" data-action="select" data-id="${a.id}">
+      <span class="dot"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(a.nome)}</span>
+      ${state.ambientes.length>1?`<span class="rm" data-action="remove" data-id="${a.id}" title="Remover ambiente">&times;</span>`:''}
+    </div>`;
+  });
+  html += '<button class="rail-add" data-action="add">+ Adicionar ambiente</button>';
+  rail.innerHTML = html;
+}
+
+function esc(s){ return String(s??"").replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+// d=0 usa Math.round explicitamente (em vez de deixar o toLocaleString arredondar)
+// para garantir que fmt(x) e roundW(x) usem sempre a mesma regra de arredondamento —
+// essencial para as parcelas exibidas somarem exatamente ao total exibido (ver
+// resultadoParaExibicao, mais abaixo).
+function fmt(n,d=0){
+  const num = Number(n||0);
+  if(d===0) return Math.round(num).toLocaleString('pt-BR');
+  return num.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
+}
+
+/* ============================================================
+   ARREDONDAMENTO CENTRAL PARA EXIBIÇÃO
+   ============================================================
+   Os cálculos internos (computeAmbiente, seleção de equipamento via
+   capacidadeSugerida) sempre usam os valores exatos, sem nenhum arredondamento.
+   Para a TELA e o PDF, porém, arredondar cada parcela e depois o total de forma
+   independente pode gerar uma diferença de 1 (ex.: sensível 1.316 + latente 377 =
+   1.693, mas o total mostrado seria 1.694 se arredondado a partir do valor exato).
+   Para evitar isso, arredondamos cada parcela individualmente e DERIVAMOS os
+   subtotais/total somando as parcelas já arredondadas — nunca arredondando o valor
+   exato do agregado. Isso garante que a soma do que aparece na tela sempre bate
+   com o total exibido. Duas versões são calculadas (W e BTU/h) porque a conversão
+   W→BTU não comuta com o arredondamento (cada coluna fecha dentro de si mesma). */
+function roundW(n){ return Math.round(Number(n)||0); }
+function roundBtu(nW){ return Math.round(w2btu(Number(nW)||0)); }
+function resultadoParaExibicao(r, isCool){
+  if(isCool){
+    const leavesW = {
+      opacas:roundW(r.opacas), vidros:roundW(r.vidros), infSens:roundW(r.infSens), infLat:roundW(r.infLat),
+      pessoasSens:roundW(r.pessoasSens), pessoasLat:roundW(r.pessoasLat), ilum:roundW(r.ilum), equip:roundW(r.equip),
+    };
+    const W = {
+      ...leavesW,
+      pessoas: leavesW.pessoasSens+leavesW.pessoasLat,
+      sensivel: leavesW.opacas+leavesW.vidros+leavesW.infSens+leavesW.pessoasSens+leavesW.ilum+leavesW.equip,
+      latente: leavesW.infLat+leavesW.pessoasLat,
+    };
+    W.total = W.sensivel + W.latente;
+    const leavesBtu = {
+      opacas:roundBtu(r.opacas), vidros:roundBtu(r.vidros), infSens:roundBtu(r.infSens), infLat:roundBtu(r.infLat),
+      pessoasSens:roundBtu(r.pessoasSens), pessoasLat:roundBtu(r.pessoasLat), ilum:roundBtu(r.ilum), equip:roundBtu(r.equip),
+    };
+    const BTU = {
+      ...leavesBtu,
+      pessoas: leavesBtu.pessoasSens+leavesBtu.pessoasLat,
+      sensivel: leavesBtu.opacas+leavesBtu.vidros+leavesBtu.infSens+leavesBtu.pessoasSens+leavesBtu.ilum+leavesBtu.equip,
+      latente: leavesBtu.infLat+leavesBtu.pessoasLat,
+    };
+    BTU.total = BTU.sensivel + BTU.latente;
+    return {W, BTU};
+  } else {
+    const W = { opacas:roundW(r.opacas), vidros:roundW(r.vidros), infPerda:roundW(r.infPerda) };
+    W.total = W.opacas + W.vidros + W.infPerda;
+    W.sensivel = W.total; W.latente = 0;
+    const BTU = { opacas:roundBtu(r.opacas), vidros:roundBtu(r.vidros), infPerda:roundBtu(r.infPerda) };
+    BTU.total = BTU.opacas + BTU.vidros + BTU.infPerda;
+    BTU.sensivel = BTU.total; BTU.latente = 0;
+    return {W, BTU};
+  }
+}
+
+/* ============================================================
+   RENDER — formulário do ambiente
+   ============================================================ */
+function optionsHtml(list, selected){
+  return list.map(v=>`<option value="${esc(v)}" ${v===selected?'selected':''}>${esc(v)}</option>`).join('');
+}
+
+function renderContent(){
+  const el = document.getElementById('content');
+  if(state.view==='resumo'){ renderResumoView(el); return; }
+  const env = activeEnv();
+  if(!env){ el.innerHTML=''; return; }
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-body">
+        <div class="envname-row">
+          <input class="envname" id="f-nome" type="text" value="${esc(env.nome)}">
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <label>Cidade de referência</label>
+            <select id="f-cidade">${optionsHtml(CIDADES, env.cidade)}</select>
+            <span class="sub">Sugestão de altitude: ${CIDADE_ALT_SUGERIDA[env.cidade]} m</span>
+          </div>
+          <div class="field">
+            <label>Altitude (Tab. 3/4)</label>
+            <select id="f-altitude">${ALTITUDES.map(a=>`<option value="${a}" ${a===env.altitude?'selected':''}>${a} m</option>`).join('')}</select>
+          </div>
+          <div class="field">
+            <label>Temp. interna — verão</label>
+            <select id="f-tbsverao"><option value="24" ${env.tbsVerao===24?'selected':''}>24 °C</option><option value="26" ${env.tbsVerao===26?'selected':''}>26 °C</option></select>
+          </div>
+          <div class="field">
+            <label>Temp. interna — inverno</label>
+            <select id="f-tbsinverno"><option value="18" ${env.tbsInverno===18?'selected':''}>18 °C</option><option value="20" ${env.tbsInverno===20?'selected':''}>20 °C</option></select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="sec-superficies">
+      <div class="card-head"><h3>Superfícies opacas</h3><span class="section-total mono" id="tot-superficies">0 W</span><span class="hint">paredes, piso, laje — Eq. 7</span></div>
+      <div class="card-body"></div>
+    </div>
+
+    <div class="card" id="sec-janelas">
+      <div class="card-head"><h3>Superfícies transparentes (janelas)</h3><span class="section-total mono" id="tot-janelas">0 W</span><span class="hint">insolação — Eq. 8</span></div>
+      <div class="card-body"></div>
+    </div>
+
+    <div class="card" id="sec-pessoas">
+      <div class="card-head"><h3>Pessoas</h3><span class="section-total mono" id="tot-pessoas">0 W</span><span class="hint">Eq. 9-10</span></div>
+      <div class="card-body"></div>
+    </div>
+
+    <div class="card" id="sec-iluminacao">
+      <div class="card-head"><h3>Iluminação</h3><span class="section-total mono" id="tot-iluminacao">0 W</span><span class="hint">Eq. 11-12</span></div>
+      <div class="card-body"></div>
+    </div>
+
+    <div class="card" id="sec-equipamentos">
+      <div class="card-head"><h3>Equipamentos</h3><span class="section-total mono" id="tot-equipamentos">0 W</span><span class="hint">Eq. 13</span></div>
+      <div class="card-body"></div>
+    </div>
+
+    <div class="card" id="sec-infiltracao">
+      <div class="card-head"><h3>Infiltração / renovação de ar</h3><span class="section-total mono" id="tot-infiltracao">0 W</span><span class="hint">Eq. 1-5 · mín. norma 3,6 m³/(h·m²)</span></div>
+      <div class="card-body"></div>
+    </div>
+  `;
+
+  document.getElementById('f-nome').addEventListener('input', e=>{ env.nome=e.target.value; renderRail(); });
+  document.getElementById('f-cidade').addEventListener('change', e=>{ env.cidade=e.target.value; renderContent(); });
+  document.getElementById('f-altitude').addEventListener('change', e=>{ env.altitude=Number(e.target.value); renderContent(); });
+  document.getElementById('f-tbsverao').addEventListener('change', e=>{ env.tbsVerao=Number(e.target.value); renderContent(); });
+  document.getElementById('f-tbsinverno').addEventListener('change', e=>{ env.tbsInverno=Number(e.target.value); renderContent(); });
+
+  renderSuperficies(env);
+  renderJanelas(env);
+  renderPessoas(env);
+  renderIluminacao(env);
+  renderEquipamentos(env);
+  renderInfiltracao(env);
+  renderResults();
+}
+
+function rowsWrap(inner){ return `<div class="tbl-wrap"><table class="rows">${inner}</table></div>`; }
+
+function renderSuperficies(env){
+  const body = document.querySelector('#sec-superficies .card-body');
+  const tiposOpts = [...Object.keys(TIPOS_SUPERFICIE), "Personalizado"];
+  let rows = env.superficies.map(s=>`
+    <tr data-id="${s.id}">
+      <td><input type="text" class="f-desc" value="${esc(s.descricao)}" placeholder="Descrição" style="min-width:110px"></td>
+      <td><select class="f-tipo">${optionsHtml(tiposOpts, s.tipo)}</select></td>
+      <td>${s.tipo==="Personalizado" ? `<input type="text" inputmode="decimal" step="0.001" class="f-r num" value="${s.rCustom??0.4}" title="R (m².°C/W)">` : `<span class="mono" style="color:var(--text-faint)">${TIPOS_SUPERFICIE[s.tipo]??''}</span>`}</td>
+      <td><select class="f-orient">${optionsHtml(ORIENTACOES_OPACAS, s.orientacao)}</select></td>
+      <td><input type="text" inputmode="decimal" step="0.01" class="f-area num" value="${s.area}"></td>
+      <td class="mono subtotal">${fmt(state.mode==='resfriamento' ? calcSuperficieOpaca(s, env.cidade, env.tbsVerao).q : calcSuperficieOpacaInverno(s, env.cidade, env.tbsInverno).q)} W</td>
+      <td><button class="rowrm" data-action="rm-superficie" data-id="${s.id}">&times;</button></td>
+    </tr>`).join('');
+  body.innerHTML = (env.superficies.length? rowsWrap(`
+    <tr><th>Descrição</th><th>Tipo</th><th>R (m²·°C/W)</th><th>Orientação</th><th>Área (m²)</th><th>Carga (W)</th><th></th></tr>
+    ${rows}`) : '<div class="empty-note">Nenhuma superfície adicionada.</div>')
+    + '<button class="addrow" data-action="add-superficie">+ Adicionar superfície</button>';
+
+  function calcQ(s){ return state.mode==='resfriamento' ? calcSuperficieOpaca(s, env.cidade, env.tbsVerao).q : calcSuperficieOpacaInverno(s, env.cidade, env.tbsInverno).q; }
+  function updateSectionTotal(){
+    // Soma os valores JÁ ARREDONDADOS de cada linha (mesmos exibidos na coluna
+    // "Carga (W)"), para o total da seção nunca diferir da soma visível das linhas.
+    const tot = env.superficies.reduce((sum,s)=>sum+roundW(calcQ(s)), 0);
+    const el = document.getElementById('tot-superficies');
+    if(el) el.textContent = fmt(tot)+' W';
+  }
+  function updateSubtotal(tr, s){
+    const cell = tr.querySelector('.subtotal');
+    if(cell) cell.textContent = fmt(calcQ(s))+' W';
+    updateSectionTotal();
+  }
+  updateSectionTotal();
+  body.querySelectorAll('tr[data-id]').forEach(tr=>{
+    const id = tr.dataset.id, s = env.superficies.find(x=>x.id===id);
+    tr.querySelector('.f-desc').addEventListener('input', e=>{ s.descricao=e.target.value; renderResults(); });
+    tr.querySelector('.f-tipo').addEventListener('change', e=>{ s.tipo=e.target.value; renderSuperficies(env); renderResults(); });
+    tr.querySelector('.f-orient').addEventListener('change', e=>{ s.orientacao=e.target.value; updateSubtotal(tr,s); renderResults(); });
+    tr.querySelector('.f-area').addEventListener('input', e=>{ s.area=parseNum(e.target.value)||0; updateSubtotal(tr,s); renderResults(); });
+    const rInput = tr.querySelector('.f-r');
+    if(rInput) rInput.addEventListener('input', e=>{ s.rCustom=parseNum(e.target.value)||0; updateSubtotal(tr,s); renderResults(); });
+  });
+  body.querySelector('[data-action="add-superficie"]').addEventListener('click', ()=>{
+    env.superficies.push({id:uid(), descricao:"", tipo:"Parede externa", area:0, orientacao:"Norte"});
+    renderSuperficies(env); renderResults();
+  });
+  body.querySelectorAll('[data-action="rm-superficie"]').forEach(b=>b.addEventListener('click', e=>{
+    env.superficies = env.superficies.filter(x=>x.id!==e.target.dataset.id);
+    renderSuperficies(env); renderResults();
+  }));
+}
+
+function renderJanelas(env){
+  const body = document.querySelector('#sec-janelas .card-body');
+  const protecaoOpts = [...Object.keys(TAB10_SOMBREAMENTO), "Personalizado"];
+  let rows = env.janelas.map(j=>`
+    <tr data-id="${j.id}">
+      <td><select class="f-orient">${optionsHtml(ORIENTACOES_JANELA, j.orientacao)}</select></td>
+      <td><select class="f-camadas"><option value="Simples" ${j.camadas!=="Duplo"?'selected':''}>Simples</option><option value="Duplo" ${j.camadas==="Duplo"?'selected':''}>Duplo</option></select></td>
+      <td><select class="f-protecao">${optionsHtml(protecaoOpts, j.protecao)}</select></td>
+      <td>${j.protecao==="Personalizado" ? `<input type="text" inputmode="decimal" step="0.01" class="f-sc num" value="${j.scCustom??0.87}" title="Fator de sombreamento">` : `<span class="mono" style="color:var(--text-faint)">${TAB10_SOMBREAMENTO[j.protecao]}</span>`}</td>
+      <td><input type="text" inputmode="decimal" step="0.01" class="f-area num" value="${j.area}"></td>
+      <td class="mono subtotal">${fmt(state.mode==='resfriamento' ? calcJanela(j, env.cidade).q : calcJanelaInverno(j, env.cidade, env.tbsInverno).q)} W</td>
+      <td><button class="rowrm" data-action="rm-janela" data-id="${j.id}">&times;</button></td>
+    </tr>`).join('');
+  body.innerHTML = (env.janelas.length? rowsWrap(`
+    <tr><th>Orientação</th><th>Vidro</th><th>Proteção solar</th><th>SC</th><th>Área (m²)</th><th>Carga (W)</th><th></th></tr>
+    ${rows}`) : '<div class="empty-note">Nenhuma janela adicionada.</div>')
+    + '<button class="addrow" data-action="add-janela">+ Adicionar janela</button>'
+    + '<div class="empty-note">Cada janela conta duas parcelas: condução (vidro simples/duplo) e insolação (proteção solar). Não é preciso lançá-la também nas superfícies opacas.</div>';
+
+  function calcQ(j){ return state.mode==='resfriamento' ? calcJanela(j, env.cidade).q : calcJanelaInverno(j, env.cidade, env.tbsInverno).q; }
+  function updateSectionTotal(){
+    const tot = env.janelas.reduce((sum,j)=>sum+roundW(calcQ(j)), 0);
+    const el = document.getElementById('tot-janelas');
+    if(el) el.textContent = fmt(tot)+' W';
+  }
+  function updateSubtotal(tr, j){
+    const cell = tr.querySelector('.subtotal');
+    if(cell) cell.textContent = fmt(calcQ(j))+' W';
+    updateSectionTotal();
+  }
+  updateSectionTotal();
+  body.querySelectorAll('tr[data-id]').forEach(tr=>{
+    const id = tr.dataset.id, j = env.janelas.find(x=>x.id===id);
+    tr.querySelector('.f-orient').addEventListener('change', e=>{ j.orientacao=e.target.value; updateSubtotal(tr,j); renderResults(); });
+    tr.querySelector('.f-camadas').addEventListener('change', e=>{ j.camadas=e.target.value; updateSubtotal(tr,j); renderResults(); });
+    tr.querySelector('.f-protecao').addEventListener('change', e=>{ j.protecao=e.target.value; renderJanelas(env); renderResults(); });
+    tr.querySelector('.f-area').addEventListener('input', e=>{ j.area=parseNum(e.target.value)||0; updateSubtotal(tr,j); renderResults(); });
+    const scInput = tr.querySelector('.f-sc');
+    if(scInput) scInput.addEventListener('input', e=>{ j.scCustom=parseNum(e.target.value)||0; updateSubtotal(tr,j); renderResults(); });
+  });
+  body.querySelector('[data-action="add-janela"]').addEventListener('click', ()=>{
+    env.janelas.push({id:uid(), orientacao:"Norte", camadas:"Simples", protecao:"Sem proteção", area:0});
+    renderJanelas(env); renderResults();
+  });
+  body.querySelectorAll('[data-action="rm-janela"]').forEach(b=>b.addEventListener('click', e=>{
+    env.janelas = env.janelas.filter(x=>x.id!==e.target.dataset.id);
+    renderJanelas(env); renderResults();
+  }));
+}
+
+function renderPessoas(env){
+  const body = document.querySelector('#sec-pessoas .card-body');
+  const opts = [...Object.keys(TAB11_PESSOAS), "Personalizado"];
+  let rows = env.pessoas.map(p=>`
+    <tr data-id="${p.id}">
+      <td><select class="f-ativ">${optionsHtml(opts, p.atividade)}</select></td>
+      <td><input type="text" inputmode="decimal" class="f-qtd num" value="${p.quantidade}"></td>
+      ${p.atividade==="Personalizado" ? `
+        <td><input type="text" inputmode="decimal" class="f-cs num" value="${p.csCustom??75}" title="W sensível/pessoa"></td>
+        <td><input type="text" inputmode="decimal" class="f-ct num" value="${p.ctCustom??150}" title="W total/pessoa"></td>` :
+        `<td class="mono" style="color:var(--text-faint)">${TAB11_PESSOAS[p.atividade].cs}</td><td class="mono" style="color:var(--text-faint)">${TAB11_PESSOAS[p.atividade].ct}</td>`}
+      <td><input type="text" inputmode="decimal" step="0.1" class="f-clf num" value="${p.clfCustom??1}" title="CLF"></td>
+      <td class="mono subtotal">${state.mode==='resfriamento' ? fmt(calcPessoas(p).qt)+' W' : `<span style="color:var(--text-faint)" title="Ganhos internos não são contabilizados no cálculo de aquecimento">—</span>`}</td>
+      <td><button class="rowrm" data-action="rm-pessoa" data-id="${p.id}">&times;</button></td>
+    </tr>`).join('');
+  body.innerHTML = (env.pessoas.length? rowsWrap(`
+    <tr><th>Atividade</th><th>Qtd.</th><th>W sens./pess.</th><th>W total/pess.</th><th>CLF</th><th>Carga (W)</th><th></th></tr>
+    ${rows}`) : '<div class="empty-note">Nenhuma pessoa adicionada.</div>')
+    + '<button class="addrow" data-action="add-pessoa">+ Adicionar</button>';
+
+  function updateSectionTotal(){
+    const el = document.getElementById('tot-pessoas');
+    if(!el) return;
+    if(state.mode!=='resfriamento'){ el.textContent = '— (só resfr.)'; return; }
+    const tot = env.pessoas.reduce((sum,p)=>sum+roundW(calcPessoas(p).qt), 0);
+    el.textContent = fmt(tot)+' W';
+  }
+  function updateSubtotal(tr, p){
+    if(state.mode==='resfriamento'){
+      const cell = tr.querySelector('.subtotal');
+      if(cell) cell.textContent = fmt(calcPessoas(p).qt)+' W';
+    }
+    updateSectionTotal();
+  }
+  updateSectionTotal();
+  body.querySelectorAll('tr[data-id]').forEach(tr=>{
+    const id = tr.dataset.id, p = env.pessoas.find(x=>x.id===id);
+    tr.querySelector('.f-ativ').addEventListener('change', e=>{
+      p.atividade=e.target.value;
+      p.clfCustom = p.atividade==='Personalizado' ? 1 : TAB11_PESSOAS[p.atividade].clf;
+      renderPessoas(env); renderResults();
+    });
+    tr.querySelector('.f-qtd').addEventListener('input', e=>{ p.quantidade=parseNum(e.target.value)||0; updateSubtotal(tr,p); renderResults(); });
+    tr.querySelector('.f-clf').addEventListener('input', e=>{ p.clfCustom=parseNum(e.target.value); updateSubtotal(tr,p); renderResults(); });
+    const cs=tr.querySelector('.f-cs'), ct=tr.querySelector('.f-ct');
+    if(cs) cs.addEventListener('input', e=>{ p.csCustom=parseNum(e.target.value)||0; updateSubtotal(tr,p); renderResults(); });
+    if(ct) ct.addEventListener('input', e=>{ p.ctCustom=parseNum(e.target.value)||0; updateSubtotal(tr,p); renderResults(); });
+  });
+  body.querySelector('[data-action="add-pessoa"]').addEventListener('click', ()=>{
+    env.pessoas.push({id:uid(), atividade:"Pessoas sentadas, trabalho leve", quantidade:1, clfCustom:1});
+    renderPessoas(env); renderResults();
+  });
+  body.querySelectorAll('[data-action="rm-pessoa"]').forEach(b=>b.addEventListener('click', e=>{
+    env.pessoas = env.pessoas.filter(x=>x.id!==e.target.dataset.id);
+    renderPessoas(env); renderResults();
+  }));
+}
+
+function renderIluminacao(env){
+  const body = document.querySelector('#sec-iluminacao .card-body');
+  const tiposOpts = [...Object.keys(TAB12_ILUMINACAO), "Personalizado"];
+  let rows = env.iluminacao.map(i=>`
+    <tr data-id="${i.id}">
+      <td><select class="f-modo"><option value="densidade" ${i.modo==='densidade'?'selected':''}>Por área (W/m²)</option><option value="potencia" ${i.modo==='potencia'?'selected':''}>Potência instalada</option></select></td>
+      ${i.modo==='densidade' ? `
+        <td><select class="f-tipoamb">${optionsHtml(tiposOpts, i.tipoAmbiente||"Quartos de dormir")}</select></td>
+        <td>${(i.tipoAmbiente==="Personalizado") ? `<input type="text" inputmode="decimal" class="f-densc num" value="${i.densidadeCustom??10}" title="W/m²">` : `<span class="mono" style="color:var(--text-faint)">${TAB12_ILUMINACAO[i.tipoAmbiente||"Quartos de dormir"]} W/m²</span>`}</td>
+        <td><input type="text" inputmode="decimal" step="0.01" class="f-area num" value="${i.area||0}"></td>` :
+        `<td colspan="2"><span class="empty-note" style="padding:0">—</span></td>
+         <td><input type="text" inputmode="decimal" class="f-pot num" value="${i.potenciaInstalada||0}" title="W instalados"></td>`}
+      <td><input type="text" inputmode="decimal" step="0.1" class="f-clf num" value="${i.clfCustom??1}" title="CLF"></td>
+      <td class="mono subtotal">${state.mode==='resfriamento' ? fmt(calcIluminacao(i).q)+' W' : `<span style="color:var(--text-faint)" title="Ganhos internos não são contabilizados no cálculo de aquecimento">—</span>`}</td>
+      <td><button class="rowrm" data-action="rm-ilum" data-id="${i.id}">&times;</button></td>
+    </tr>`).join('');
+  body.innerHTML = (env.iluminacao.length? rowsWrap(`
+    <tr><th>Modo</th><th>Ambiente / —</th><th>Densidade ou Potência</th><th>Área (m²) / —</th><th>CLF</th><th>Carga (W)</th><th></th></tr>
+    ${rows}`) : '<div class="empty-note">Nenhuma iluminação adicionada.</div>')
+    + '<button class="addrow" data-action="add-ilum">+ Adicionar</button>';
+
+  function updateSectionTotal(){
+    const el = document.getElementById('tot-iluminacao');
+    if(!el) return;
+    if(state.mode!=='resfriamento'){ el.textContent = '— (só resfr.)'; return; }
+    const tot = env.iluminacao.reduce((sum,i)=>sum+roundW(calcIluminacao(i).q), 0);
+    el.textContent = fmt(tot)+' W';
+  }
+  function updateSubtotal(tr, i){
+    if(state.mode==='resfriamento'){
+      const cell = tr.querySelector('.subtotal');
+      if(cell) cell.textContent = fmt(calcIluminacao(i).q)+' W';
+    }
+    updateSectionTotal();
+  }
+  updateSectionTotal();
+  body.querySelectorAll('tr[data-id]').forEach(tr=>{
+    const id = tr.dataset.id, i = env.iluminacao.find(x=>x.id===id);
+    tr.querySelector('.f-modo').addEventListener('change', e=>{ i.modo=e.target.value; renderIluminacao(env); renderResults(); });
+    tr.querySelector('.f-clf').addEventListener('input', e=>{ i.clfCustom=parseNum(e.target.value); updateSubtotal(tr,i); renderResults(); });
+    const tipo = tr.querySelector('.f-tipoamb');
+    if(tipo) tipo.addEventListener('change', e=>{ i.tipoAmbiente=e.target.value; renderIluminacao(env); renderResults(); });
+    const densc = tr.querySelector('.f-densc');
+    if(densc) densc.addEventListener('input', e=>{ i.densidadeCustom=parseNum(e.target.value)||0; updateSubtotal(tr,i); renderResults(); });
+    const area = tr.querySelector('.f-area');
+    if(area) area.addEventListener('input', e=>{ i.area=parseNum(e.target.value)||0; updateSubtotal(tr,i); renderResults(); });
+    const pot = tr.querySelector('.f-pot');
+    if(pot) pot.addEventListener('input', e=>{ i.potenciaInstalada=parseNum(e.target.value)||0; updateSubtotal(tr,i); renderResults(); });
+  });
+  body.querySelector('[data-action="add-ilum"]').addEventListener('click', ()=>{
+    env.iluminacao.push({id:uid(), modo:"densidade", tipoAmbiente:"Quartos de dormir", area:0, clfCustom:1});
+    renderIluminacao(env); renderResults();
+  });
+  body.querySelectorAll('[data-action="rm-ilum"]').forEach(b=>b.addEventListener('click', e=>{
+    env.iluminacao = env.iluminacao.filter(x=>x.id!==e.target.dataset.id);
+    renderIluminacao(env); renderResults();
+  }));
+}
+
+function renderEquipamentos(env){
+  const body = document.querySelector('#sec-equipamentos .card-body');
+  const opts = [...Object.keys(TAB13_EQUIPAMENTOS), "Personalizado"];
+  let rows = env.equipamentos.map(eq=>`
+    <tr data-id="${eq.id}">
+      <td><select class="f-nome">${optionsHtml(opts, eq.nome)}</select></td>
+      <td><input type="text" inputmode="decimal" class="f-qtd num" value="${eq.quantidade}"></td>
+      <td>${eq.nome==="Personalizado" ? `<input type="text" inputmode="decimal" class="f-w num" value="${eq.wCustom??100}" title="W">` : `<span class="mono" style="color:var(--text-faint)">${TAB13_EQUIPAMENTOS[eq.nome].w} W</span>`}</td>
+      <td><input type="text" inputmode="decimal" step="0.1" class="f-clf num" value="${eq.clfCustom??(eq.nome==='Personalizado'?1:TAB13_EQUIPAMENTOS[eq.nome].clf)}" title="CLF"></td>
+      <td class="mono subtotal">${state.mode==='resfriamento' ? fmt(calcEquipamento(eq).q)+' W' : `<span style="color:var(--text-faint)" title="Ganhos internos não são contabilizados no cálculo de aquecimento">—</span>`}</td>
+      <td><button class="rowrm" data-action="rm-eq" data-id="${eq.id}">&times;</button></td>
+    </tr>`).join('');
+  body.innerHTML = (env.equipamentos.length? rowsWrap(`
+    <tr><th>Equipamento</th><th>Qtd.</th><th>W unitário</th><th>CLF</th><th>Carga (W)</th><th></th></tr>
+    ${rows}`) : '<div class="empty-note">Nenhum equipamento adicionado.</div>')
+    + '<button class="addrow" data-action="add-eq">+ Adicionar equipamento</button>';
+
+  function updateSectionTotal(){
+    const el = document.getElementById('tot-equipamentos');
+    if(!el) return;
+    if(state.mode!=='resfriamento'){ el.textContent = '— (só resfr.)'; return; }
+    const tot = env.equipamentos.reduce((sum,eq)=>sum+roundW(calcEquipamento(eq).q), 0);
+    el.textContent = fmt(tot)+' W';
+  }
+  function updateSubtotal(tr, eq){
+    if(state.mode==='resfriamento'){
+      const cell = tr.querySelector('.subtotal');
+      if(cell) cell.textContent = fmt(calcEquipamento(eq).q)+' W';
+    }
+    updateSectionTotal();
+  }
+  updateSectionTotal();
+  body.querySelectorAll('tr[data-id]').forEach(tr=>{
+    const id = tr.dataset.id, eq = env.equipamentos.find(x=>x.id===id);
+    tr.querySelector('.f-nome').addEventListener('change', e=>{
+      eq.nome=e.target.value;
+      // Sincroniza o CLF com o catálogo ao trocar de equipamento — o usuário
+      // ainda pode ajustar manualmente depois. "Personalizado" usa CLF 1 padrão.
+      eq.clfCustom = eq.nome==='Personalizado' ? 1 : TAB13_EQUIPAMENTOS[eq.nome].clf;
+      renderEquipamentos(env); renderResults();
+    });
+    tr.querySelector('.f-qtd').addEventListener('input', e=>{ eq.quantidade=parseNum(e.target.value)||0; updateSubtotal(tr,eq); renderResults(); });
+    tr.querySelector('.f-clf').addEventListener('input', e=>{ eq.clfCustom=parseNum(e.target.value); updateSubtotal(tr,eq); renderResults(); });
+    const w = tr.querySelector('.f-w');
+    if(w) w.addEventListener('input', e=>{ eq.wCustom=parseNum(e.target.value)||0; updateSubtotal(tr,eq); renderResults(); });
+  });
+  body.querySelector('[data-action="add-eq"]').addEventListener('click', ()=>{
+    env.equipamentos.push({id:uid(), nome:"Personalizado", quantidade:1, wCustom:100, clfCustom:1});
+    renderEquipamentos(env); renderResults();
+  });
+  body.querySelectorAll('[data-action="rm-eq"]').forEach(b=>b.addEventListener('click', e=>{
+    env.equipamentos = env.equipamentos.filter(x=>x.id!==e.target.dataset.id);
+    renderEquipamentos(env); renderResults();
+  }));
+}
+
+function renderInfiltracao(env){
+  const body = document.querySelector('#sec-infiltracao .card-body');
+  body.innerHTML = `
+    <div class="field-grid">
+      <div class="field"><label>Área de piso do ambiente</label><input type="text" inputmode="decimal" step="0.01" id="f-areapiso" value="${env.infiltracao.areaPiso}"><span class="sub">m²</span></div>
+      <div class="field">
+        <label>Vazão específica</label>
+        <input type="text" inputmode="decimal" step="0.1" min="3.6" id="f-vazao" value="${env.infiltracao.vazaoEspecifica}">
+        <span class="sub">m³/(h·m²) — mín. 3,6 (só renovação, com infiltração calculada à parte) · 7,2 se não houver dados de vedação de portas/janelas (Anexo A)</span>
+        <span class="warn-msg" id="warn-vazao" style="display:none">Abaixo do mínimo normativo (3,6 m³/(h·m²)) para esta área de piso — será ajustado ao sair do campo.</span>
+      </div>
+    </div>`;
+  function updateSectionTotal(){
+    const el = document.getElementById('tot-infiltracao');
+    if(!el) return;
+    let tot;
+    if(state.mode==='resfriamento'){
+      tot = calcInfiltracaoVerao(env.infiltracao, env.cidade, env.altitude, env.tbsVerao).qtae;
+    } else {
+      tot = Math.max(-calcInfiltracaoInverno(env.infiltracao, env.cidade, env.altitude, env.tbsInverno).qtae, 0);
+    }
+    el.textContent = fmt(tot)+' W';
+  }
+  function updateValidation(){
+    const invalido = infiltracaoInvalida(env.infiltracao);
+    const warn = document.getElementById('warn-vazao');
+    const inputVazao = document.getElementById('f-vazao');
+    if(warn) warn.style.display = invalido ? 'block' : 'none';
+    if(inputVazao) inputVazao.classList.toggle('invalid', invalido);
+  }
+  updateSectionTotal();
+  updateValidation();
+  document.getElementById('f-areapiso').addEventListener('input', e=>{
+    env.infiltracao.areaPiso=parseNum(e.target.value)||0;
+    updateSectionTotal(); updateValidation(); renderResults();
+  });
+  const vazaoInput = document.getElementById('f-vazao');
+  vazaoInput.addEventListener('input', e=>{
+    env.infiltracao.vazaoEspecifica=parseNum(e.target.value)||0;
+    updateSectionTotal(); updateValidation(); renderResults();
+  });
+  // Correção para o mínimo normativo ao sair do campo (a norma não permite renovação
+  // abaixo de 3,6 m³/(h·m²) quando há área de piso informada).
+  vazaoInput.addEventListener('blur', e=>{
+    if(infiltracaoInvalida(env.infiltracao)){
+      env.infiltracao.vazaoEspecifica = VAZAO_MINIMA_RENOVACAO;
+      e.target.value = String(VAZAO_MINIMA_RENOVACAO).replace('.', ',');
+      updateSectionTotal(); updateValidation(); renderResults();
+    }
+  });
+}
+
+/* ============================================================
+   RENDER — painel de resultados
+   ============================================================ */
+function renderResults(){
+  const panel = document.getElementById('resultsPanel');
+  if(state.view==='resumo'){ panel.innerHTML=''; return; }
+  const env = activeEnv();
+  if(!env){ panel.innerHTML=''; return; }
+  const r = computeAmbiente(env, state.mode);
+  const isCool = state.mode==='resfriamento';
+  const rd = resultadoParaExibicao(r, isCool);
+  const cap = capacidadeSugerida(w2btu(r.total)); // seleção do equipamento usa o valor exato
+  const inst = especificacaoInstalacao(cap);
+  const areaTotal = env.infiltracao.areaPiso || 1;
+  const m2tr = rd.W.total>0 ? areaTotal / (rd.W.total/3517) : null;
+
+  let rowsHtml = '';
+  if(isCool){
+    rowsHtml = `
+      <div class="res-row"><span class="k">Transmissão opaca</span><span class="v">${fmt(rd.W.opacas)} W</span></div>
+      <div class="res-row"><span class="k">Transmissão vidros</span><span class="v">${fmt(rd.W.vidros)} W</span></div>
+      <div class="res-row"><span class="k">Infiltração (sens.)</span><span class="v">${fmt(rd.W.infSens)} W</span></div>
+      <div class="res-row"><span class="k">Infiltração (lat.)</span><span class="v">${fmt(rd.W.infLat)} W</span></div>
+      <div class="res-row"><span class="k">Pessoas (sens. + lat.)</span><span class="v">${fmt(rd.W.pessoas)} W</span></div>
+      <div class="res-row"><span class="k">Iluminação</span><span class="v">${fmt(rd.W.ilum)} W</span></div>
+      <div class="res-row"><span class="k">Equipamentos</span><span class="v">${fmt(rd.W.equip)} W</span></div>
+      <div class="res-row"><span class="k">Sensível</span><span class="v">${fmt(rd.W.sensivel)} W</span></div>
+      <div class="res-row"><span class="k">Latente</span><span class="v">${fmt(rd.W.latente)} W</span></div>`;
+  } else {
+    rowsHtml = `
+      <div class="res-row"><span class="k">Perda — opacas</span><span class="v">${fmt(rd.W.opacas)} W</span></div>
+      <div class="res-row"><span class="k">Perda — vidros</span><span class="v">${fmt(rd.W.vidros)} W</span></div>
+      <div class="res-row"><span class="k">Perda — infiltração</span><span class="v">${fmt(rd.W.infPerda)} W</span></div>`;
+  }
+
+  panel.innerHTML = `
+    <div class="card">
+      <div class="res-total">
+        <span class="label">${isCool?'Carga de resfriamento':'Carga de aquecimento'}</span>
+        <span class="value">${fmt(rd.W.total)} <small>W</small></span>
+        <span class="sub">${fmt(rd.BTU.total)} BTU/h</span>
+      </div>
+      <div class="res-rows">${rowsHtml}</div>
+      <span class="chip ${isCool?'cool':'heat'}">Equipamento sugerido: ${cap!=null ? fmt(cap)+' BTU/h' : 'não necessário'}</span>
+      <div class="note">Relação: ${m2tr!=null ? fmt(m2tr,1)+' m²/TR' : '—'} sobre ${fmt(areaTotal,1)} m² de piso. Capacidade sugerida = a mais próxima da carga (podendo ficar levemente abaixo), pois a norma calcula para o dia mais crítico do ano. ${isCool? 'A norma recomenda não aplicar fator de segurança na seleção.' : 'Aquecimento: método simplificado de transmissão + infiltração (a NBR 16655-3 não detalha equações de inverno como faz para o verão).'}</div>
+    </div>
+    ${inst ? `
+    <div class="card">
+      <div class="card-head"><h3 style="font-size:13px">Instalação — ref. ${fmt(cap)} BTU/h</h3></div>
+      <div class="res-rows" style="padding-top:10px">
+        <div class="res-row"><span class="k">Linha frigorígena — líquido</span><span class="v">${inst.liquido}</span></div>
+        <div class="res-row"><span class="k">Linha frigorígena — sucção</span><span class="v">${inst.sucao}</span></div>
+        <div class="res-row"><span class="k">Isolamento térmico (ambos os tubos)</span><span class="v">${inst.isolamento}</span></div>
+        <div class="res-row"><span class="k">Disjuntor</span><span class="v">${inst.disjuntor} A</span></div>
+        <div class="res-row"><span class="k">Cabo de alimentação</span><span class="v">${inst.caboAlim} mm²</span></div>
+        <div class="res-row"><span class="k">Cabo de interligação</span><span class="v">${inst.caboInterlig} mm²</span></div>
+      </div>
+      <div class="note">Valores de referência de mercado para split 220 V monofásico (não constam na NBR 16655-3) — variam por fabricante, modelo, tensão e comprimento da linha. Confirme sempre no manual de instalação do equipamento escolhido.</div>
+    </div>` : ''}`;
+}
+
+/* ============================================================
+   RENDER — resumo geral do projeto
+   ============================================================ */
+function renderResumoView(el){
+  const isCool = state.mode==='resfriamento';
+  const rows = state.ambientes.map(env=>{
+    const r = computeAmbiente(env, state.mode);
+    return {env, r, totalW: roundW(r.total), totalBtu: roundBtu(r.total)};
+  });
+  // Total do projeto = soma dos totais JÁ ARREDONDADOS de cada ambiente (não o
+  // arredondamento do somatório exato), para bater com a lista mostrada acima.
+  const totW = rows.reduce((s,x)=>s+x.totalW,0);
+  const totBtu = rows.reduce((s,x)=>s+x.totalBtu,0);
+  const badgeStyle = isCool ? '' : ' style="background:var(--accent2-soft);color:var(--accent2-strong)"';
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-head"><h3>Resumo geral do projeto</h3><span class="hint">${state.ambientes.length} ambiente(s) · ${isCool?'Resfriamento':'Aquecimento'}</span></div>
+      <div class="card-body">
+        <div class="tbl-wrap"><table class="summary-table">
+          <tr><th>Ambiente</th><th class="num">${isCool?'Resfr.':'Aquec.'} (W)</th><th class="num">${isCool?'Resfr.':'Aquec.'} (BTU/h)</th><th>Equipamento sugerido</th><th>Instalação (líq. · suc. · disj. · cabo)</th></tr>
+          ${rows.map(({env,r,totalW,totalBtu})=>{
+            const cap = capacidadeSugerida(w2btu(r.total)); // exato, não o arredondado
+            const inst = especificacaoInstalacao(cap);
+            return `
+            <tr>
+              <td>${esc(env.nome)}</td>
+              <td class="num">${fmt(totalW)}</td>
+              <td class="num">${fmt(totalBtu)}</td>
+              <td><span class="badge"${badgeStyle}>${cap!=null ? fmt(cap)+' BTU/h' : 'não necessário'}</span></td>
+              <td class="mono" style="font-size:11.5px;color:var(--text-muted);white-space:nowrap;">${inst ? `${inst.liquido} · ${inst.sucao} · ${inst.disjuntor}A · ${inst.caboAlim}mm²` : '—'}</td>
+            </tr>`;}).join('')}
+          <tr class="grand">
+            <td>Total do projeto</td>
+            <td class="num">${fmt(totW)}</td>
+            <td class="num">${fmt(totBtu)}</td>
+            <td></td>
+            <td></td>
+          </tr>
+        </table></div>
+        <div class="note" style="padding:10px 2px 0">Instalação: valores de referência de mercado (não constam na NBR 16655-3) para split 220 V monofásico — confirme sempre no manual do equipamento.</div>
+      </div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   EXPORTAÇÃO EM PDF
+   ============================================================
+   Testado ao vivo no artefato publicado: tanto o download via Blob/<a
+   download> quanto window.print() são inertes dentro do iframe isolado em
+   que o Artifact roda (sem diálogo, sem erro — apenas nada acontece). A
+   única via que realmente entrega um arquivo ao visitante é a capacidade
+   nativa de downloads da plataforma (a mesma usada por "Salvar projeto"),
+   por isso o PDF também passa por ela. */
+async function gerarPdf(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt', format:'a4'});
+  const marginX = 40;
+  let y = 50;
+  doc.setFont('helvetica','bold'); doc.setFontSize(16);
+  doc.text('Relatório de Carga Térmica — NBR 16655-3', marginX, y);
+  y += 18;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100);
+  doc.text('Gerado automaticamente · ' + new Date().toLocaleDateString('pt-BR'), marginX, y);
+  doc.setTextColor(0);
+  y += 20;
+
+  const isCool = state.mode==='resfriamento';
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100);
+  doc.text(`Modo: ${isCool?'Resfriamento (verão)':'Aquecimento (inverno, estimativa simplificada)'}`, marginX, y);
+  doc.setTextColor(0);
+  y += 16;
+
+  const notaInstalacao = 'Instalação: valores de referência de mercado (fora do escopo da NBR 16655-3) para split 220 V monofásico — confirme no manual do equipamento específico.';
+
+  state.ambientes.forEach((env, idx)=>{
+    const r = computeAmbiente(env, state.mode);
+    const rd = resultadoParaExibicao(r, isCool);
+    if(idx>0){ doc.addPage(); y=50; }
+    doc.setFont('helvetica','bold'); doc.setFontSize(13);
+    doc.text(env.nome, marginX, y); y+=6;
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100);
+    doc.text(`${env.cidade} · altitude ${env.altitude} m · verão ${env.tbsVerao}°C · inverno ${env.tbsInverno}°C`, marginX, y+10);
+    doc.setTextColor(0);
+    y += 24;
+
+    const capAmb = capacidadeSugerida(w2btu(r.total));
+    const capAmbTexto = capAmb!=null ? fmt(capAmb)+' BTU/h' : 'não necessário';
+    const instAmb = especificacaoInstalacao(capAmb);
+    const linhasInstalacao = instAmb ? [
+      ['Linha frigorígena — líquido / sucção', {content: `${instAmb.liquido} / ${instAmb.sucao}`, colSpan:2}],
+      ['Isolamento térmico (ambos os tubos)', {content: instAmb.isolamento, colSpan:2}],
+      ['Disjuntor', {content: instAmb.disjuntor+' A', colSpan:2}],
+      ['Cabo de alimentação / interligação', {content: `${instAmb.caboAlim} mm² / ${instAmb.caboInterlig} mm²`, colSpan:2}],
+    ] : [];
+
+    if(isCool){
+      doc.autoTable({
+        startY: y, margin:{left:marginX,right:marginX}, theme:'grid', styles:{fontSize:9, cellPadding:4},
+        headStyles:{fillColor:[14,111,98]},
+        head:[['Resfriamento (verão)','W','BTU/h']],
+        body:[
+          ['Transmissão opaca', fmt(rd.W.opacas), fmt(rd.BTU.opacas)],
+          ['Transmissão vidros', fmt(rd.W.vidros), fmt(rd.BTU.vidros)],
+          ['Infiltração (sens.+lat.)', fmt(rd.W.infSens+rd.W.infLat), fmt(rd.BTU.infSens+rd.BTU.infLat)],
+          ['Pessoas', fmt(rd.W.pessoas), fmt(rd.BTU.pessoas)],
+          ['Iluminação', fmt(rd.W.ilum), fmt(rd.BTU.ilum)],
+          ['Equipamentos', fmt(rd.W.equip), fmt(rd.BTU.equip)],
+          [{content:'TOTAL (sens. '+fmt(rd.W.sensivel)+' + lat. '+fmt(rd.W.latente)+')', styles:{fontStyle:'bold'}}, {content:fmt(rd.W.total),styles:{fontStyle:'bold'}}, {content:fmt(rd.BTU.total),styles:{fontStyle:'bold'}}],
+          ['Equipamento sugerido', {content:capAmbTexto, colSpan:2}],
+          ...linhasInstalacao,
+        ],
+      });
+    } else {
+      doc.autoTable({
+        startY: y, margin:{left:marginX,right:marginX}, theme:'grid', styles:{fontSize:9, cellPadding:4},
+        headStyles:{fillColor:[194,84,15]},
+        head:[['Aquecimento (inverno, estimativa simplificada)','W','BTU/h']],
+        body:[
+          ['Perda — opacas', fmt(rd.W.opacas), fmt(rd.BTU.opacas)],
+          ['Perda — vidros', fmt(rd.W.vidros), fmt(rd.BTU.vidros)],
+          ['Perda — infiltração', fmt(rd.W.infPerda), fmt(rd.BTU.infPerda)],
+          [{content:'TOTAL', styles:{fontStyle:'bold'}}, {content:fmt(rd.W.total),styles:{fontStyle:'bold'}}, {content:fmt(rd.BTU.total),styles:{fontStyle:'bold'}}],
+          ['Equipamento sugerido', {content:capAmbTexto, colSpan:2}],
+          ...linhasInstalacao,
+        ],
+      });
+    }
+    if(instAmb){
+      y = doc.lastAutoTable.finalY + 10;
+      doc.setFont('helvetica','italic'); doc.setFontSize(7.5); doc.setTextColor(130);
+      doc.text(notaInstalacao, marginX, y);
+      doc.setTextColor(0);
+    }
+  });
+
+  // Página de resumo
+  doc.addPage();
+  doc.setFont('helvetica','bold'); doc.setFontSize(13);
+  doc.text('Resumo geral do projeto', marginX, 50);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100);
+  doc.text(`Modo: ${isCool?'Resfriamento':'Aquecimento'}`, marginX, 64);
+  doc.setTextColor(0);
+  doc.autoTable({
+    startY: 74, margin:{left:marginX,right:marginX}, theme:'grid', styles:{fontSize:8.5, cellPadding:4},
+    headStyles:{fillColor: isCool?[14,111,98]:[194,84,15]},
+    head:[['Ambiente', (isCool?'Resfr.':'Aquec.')+' (W)', (isCool?'Resfr.':'Aquec.')+' (BTU/h)', 'Equip. sugerido', 'Líq./Suc.', 'Isol.', 'Disj.', 'Cabo alim./interl.']],
+    body: state.ambientes.map(env=>{
+      const r = computeAmbiente(env, state.mode);
+      const cap = capacidadeSugerida(w2btu(r.total)); // exato, não o arredondado
+      const inst = especificacaoInstalacao(cap);
+      return [
+        env.nome, fmt(roundW(r.total)), fmt(roundBtu(r.total)), cap!=null ? fmt(cap)+' BTU/h' : 'não necessário',
+        inst ? `${inst.liquido} / ${inst.sucao}` : '—',
+        inst ? inst.isolamento : '—',
+        inst ? inst.disjuntor+' A' : '—',
+        inst ? `${inst.caboAlim} / ${inst.caboInterlig} mm²` : '—',
+      ];
+    }),
+  });
+  doc.setFont('helvetica','italic'); doc.setFontSize(7.5); doc.setTextColor(130);
+  doc.text(notaInstalacao, marginX, doc.lastAutoTable.finalY + 14);
+  doc.setTextColor(0);
+
+  const blob = doc.output('blob');
+  const arrayBuf = await blob.arrayBuffer();
+  return arrayBuf;
+}
+
+async function baixarPdf(){
+  if(projetoTemDadosInvalidos()){
+    alert('Há vazão de renovação de ar abaixo do mínimo normativo (3,6 m³/(h·m²)) em algum ambiente. Corrija o campo "Vazão específica" (ou saia dele para ajuste automático) antes de gerar o PDF.');
+    return;
+  }
+  const btn = document.getElementById('btnPdf');
+  btn.disabled = true; const orig = btn.textContent; btn.textContent = 'Gerando…';
+  try{
+    const buf = await gerarPdf();
+    await salvarArquivo(buf, 'carga-termica-nbr16655.pdf', 'application/pdf');
+  } catch(err){
+    console.error(err);
+    alert('Não foi possível gerar o PDF agora. Verifique sua conexão (o relatório usa bibliotecas carregadas via internet) e tente novamente.');
+  } finally {
+    btn.disabled = false; btn.textContent = orig;
+  }
+}
+
+/* ============================================================
+   SALVAR / ABRIR PROJETO (.json)
+   ============================================================ */
+function serializeProjeto(){
+  return JSON.stringify({
+    formato: "nbr16655-carga-termica",
+    versao: 1,
+    salvoEm: new Date().toISOString(),
+    mode: state.mode,
+    ambientes: state.ambientes,
+  }, null, 2);
+}
+
+// Dentro do visualizador de artefatos, um link/blob de download comum não
+// funciona — o ambiente só entrega um arquivo ao visitante através do recurso
+// mediado de downloads da própria plataforma. Por isso salvar/baixar usam
+// exclusivamente essa via; quando ela não está disponível para quem abriu o
+// link (ou foi recusada), mostramos uma mensagem clara em vez de falhar
+// silenciosamente ou tentar um substituto que não teria efeito aqui.
+async function salvarArquivo(data, filename, mime){
+  try{
+    const blob = new Blob([data], {type: mime || 'application/octet-stream'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  } catch(err){
+    console.error(err);
+    alert('Não foi possível concluir o download agora. Tente novamente.');
+  }
+}
+
+async function salvarProjeto(){
+  const btn = document.getElementById('btnSalvar');
+  btn.disabled = true; const orig = btn.textContent; btn.textContent = 'Salvando…';
+  try{
+    const json = serializeProjeto();
+    await salvarArquivo(json, 'projeto-carga-termica.json', 'application/json');
+  } catch(err){
+    console.error(err);
+    alert('Não foi possível salvar o projeto agora. Tente novamente.');
+  } finally {
+    btn.disabled = false; btn.textContent = orig;
+  }
+}
+
+function validarAmbiente(a){
+  return a && typeof a==='object' && typeof a.id==='string' && Array.isArray(a.superficies) && Array.isArray(a.janelas)
+    && Array.isArray(a.pessoas) && Array.isArray(a.iluminacao) && Array.isArray(a.equipamentos) && a.infiltracao;
+}
+
+function abrirProjetoDeArquivo(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const data = JSON.parse(reader.result);
+      if(!data || !Array.isArray(data.ambientes) || !data.ambientes.length || !data.ambientes.every(validarAmbiente)){
+        throw new Error('formato inválido');
+      }
+      // Sanitiza a vazão de renovação de cada ambiente importado — impede que um
+      // arquivo externo (editado manualmente ou de versão anterior) contorne o
+      // mínimo normativo de 3,6 m³/(h·m²) quando há área de piso informada.
+      data.ambientes.forEach(a=>{
+        if(infiltracaoInvalida(a.infiltracao)) a.infiltracao.vazaoEspecifica = VAZAO_MINIMA_RENOVACAO;
+      });
+      state.ambientes = data.ambientes;
+      state.mode = data.mode === 'aquecimento' ? 'aquecimento' : 'resfriamento';
+      state.activeId = state.ambientes[0].id;
+      state.view = 'ambiente';
+      document.querySelectorAll('#modeToggle button').forEach(b=>b.classList.toggle('active', b.dataset.mode===state.mode));
+      renderRail(); renderContent();
+    } catch(err){
+      console.error(err);
+      alert('Não foi possível abrir este arquivo. Verifique se é um projeto (.json) exportado por este app.');
+    }
+  };
+  reader.onerror = () => alert('Não foi possível ler o arquivo selecionado.');
+  reader.readAsText(file);
+}
+
+
+/* ============================================================
+   EVENTOS GLOBAIS
+   ============================================================ */
+document.getElementById('rail').addEventListener('click', e=>{
+  const item = e.target.closest('[data-action]');
+  if(!item) return;
+  const action = item.dataset.action;
+  if(action==='select'){ state.view='ambiente'; state.activeId=item.dataset.id; renderRail(); renderContent(); }
+  else if(action==='resumo'){ state.view='resumo'; renderRail(); renderContent(); }
+  else if(action==='add'){
+    const n = novoAmbiente('Ambiente '+(state.ambientes.length+1));
+    state.ambientes.push(n); state.view='ambiente'; state.activeId=n.id;
+    renderRail(); renderContent();
+  } else if(action==='remove'){
+    e.stopPropagation();
+    if(state.ambientes.length<=1) return;
+    const id = item.dataset.id;
+    state.ambientes = state.ambientes.filter(a=>a.id!==id);
+    if(state.activeId===id){ state.activeId = state.ambientes[0].id; state.view='ambiente'; }
+    renderRail(); renderContent();
+  }
+});
+
+document.getElementById('modeToggle').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-mode]');
+  if(!btn) return;
+  state.mode = btn.dataset.mode;
+  document.querySelectorAll('#modeToggle button').forEach(b=>b.classList.toggle('active', b===btn));
+  renderContent();
+});
+
+document.getElementById('btnPdf').addEventListener('click', baixarPdf);
+document.getElementById('btnSalvar').addEventListener('click', salvarProjeto);
+document.getElementById('btnAbrir').addEventListener('click', ()=>{ document.getElementById('fileAbrir').value = ''; document.getElementById('fileAbrir').click(); });
+document.getElementById('fileAbrir').addEventListener('change', e=>{
+  const file = e.target.files?.[0];
+  if(file) abrirProjetoDeArquivo(file);
+});
+
+/* ============================================================
+   INICIALIZAÇÃO
+   ============================================================ */
+renderRail();
+renderContent();
+</script>
+
+</body></html>
